@@ -80,7 +80,7 @@
         // 1. Fetch BOTH APIs on load
         async function fetchBothServers() {
             const grid = document.getElementById('grid');
-            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#999; margin-top:50px;">Fetching Servers...</div>';
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#999; margin-top:50px;">Loading Channels...</div>';
             
             try {
                 try {
@@ -259,7 +259,7 @@
         ui.configure({
             controlPanelElements: ['play_pause','time_and_duration','mute','volume','spacer','language','captions','picture_in_picture','quality','fullscreen'],
             // Updated Player Progress Bar to Red
-            seekBarColors: { base: 'rgba(255,255,255,0.3)', buffered: 'rgba(229, 9, 20, 0.5)', played: '#e50914' }
+            seekBarColors: { base: 'white', buffered: 'red', played: 'white' }
         });
 
         const kid = ${safeKid};
