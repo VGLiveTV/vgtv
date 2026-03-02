@@ -53,7 +53,7 @@
         height: 100%;
         padding: 20px;
         box-sizing: border-box;
-        max-width: 1200px;
+        width: 100%; /* Ensures full width on desktop */
         margin: 0 auto;
     }
 
@@ -259,7 +259,7 @@
           const channel = allChannels.find(c => c.id === id);
           if (channel) {
             iframe.src = channel.link; 
-            document.title = channel.name; // Changed to show only channel name
+            document.title = channel.name; 
           } else {
             alert("Channel not found!");
           }
