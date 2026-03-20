@@ -43,141 +43,43 @@ video{
 @media(max-width:700px){
     .custom-watermark{font-size:9px;top:60%;left:16%}
 }
-
-/* --- Input Panel Styles --- */
-#input-panel {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    z-index: 9999;
-    background: rgba(15, 23, 42, 0.85);
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid #334155;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 320px;
-    backdrop-filter: blur(5px);
-    transition: 0.3s;
-}
-
-#input-panel input {
-    padding: 8px;
-    background: #000;
-    border: 1px solid #444;
-    color: #fff;
-    border-radius: 4px;
-    font-family: monospace;
-    font-size: 12px;
-    outline: none;
-}
-#input-panel input:focus { border-color: #e50914; }
-
-#play-btn {
-    padding: 10px;
-    background: #e50914;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-weight: bold;
-    cursor: pointer;
-    font-size: 14px;
-}
-#play-btn:hover { background: #ff0a16; }
-
-#toggle-panel {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    z-index: 10000;
-    background: #222;
-    color: white;
-    border: 1px solid #444;
-    padding: 5px 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 12px;
-    display: none;
-}
 </style>
 </head>
 <body>
 
-<button id="toggle-panel" onclick="togglePanel()">Show Panel</button>
-<div id="input-panel">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-        <span style="color: white; font-weight: bold; font-size: 14px;">Manual Channel Load</span>
-        <span style="color: #888; cursor: pointer; font-size: 18px; line-height: 1;" onclick="togglePanel()">×</span>
-    </div>
-    <input type="text" id="input-url" placeholder="Stream URL (.mpd)" value="https://jiotvmblive.cdn.jio.com/bpk-tv/DD_Sports_BTS/output/index.mpd">
-    <input type="text" id="input-kid" placeholder="Key ID" value="0c1b139b9a955134a1efae8e44b63aac">
-    <input type="text" id="input-key" placeholder="Key" value="00897bffd6997049787270797b8c3a17">
-    <button id="play-btn">Play Stream</button>
-</div>
-
 <div class="shaka-video-container" id="player-container">
+    <video id="video" autoplay muted playsinline preload="metadata"></video>
     <div class="custom-watermark"> </div>
 </div>
 
 <script>
-// Toggle Panel UI
-function togglePanel() {
-    const panel = document.getElementById('input-panel');
-    const toggleBtn = document.getElementById('toggle-panel');
-    if (panel.style.display === 'none') {
-        panel.style.display = 'flex';
-        toggleBtn.style.display = 'none';
-    } else {
-        panel.style.display = 'none';
-        toggleBtn.style.display = 'block';
-    }
-}
+(function(){
+  const CONFIG={
+    streamUrl:"https://jiotvmblive.cdn.jio.com/bpk-tv/Aaj_Tak_BTS/output/index.mpd",
+    keyId:"609ace1518f15ee2bcee407f5e435fed",
+    key:"533464a6d57d3e40b61b8fa8c4fe6627",
+    cookieUrl:"https://allrounderid2.pages.dev/api/cookie.json"
+  };
 
-// Global references so we can destroy them on reload
-let currentPlayer = null;
-let currentUi = null;
+  document.addEventListener("DOMContentLoaded",async()=>{
 
-async function buildAndPlayStream() {
-    const CONFIG = {
-        streamUrl: document.getElementById("input-url").value.trim(),
-        keyId: document.getElementById("input-kid").value.trim(),
-        key: document.getElementById("input-key").value.trim(),
-        cookieUrl: "https://allrounderid2.pages.dev/api/cookie.json"
-    };
-
-    // 1. Completely destroy old player instances to prevent Shaka freezing
-    if (currentUi) { await currentUi.destroy(); }
-    if (currentPlayer) { await currentPlayer.destroy(); }
-
-    const container = document.getElementById("player-container");
-    const oldVideo = document.getElementById("video");
-    if (oldVideo) { oldVideo.remove(); }
-    
-    // Create a fresh video tag
-    const video = document.createElement("video");
-    video.id = "video";
-    video.autoplay = true;
-    video.muted = true;
-    video.playsInline = true;
-    video.setAttribute("preload", "metadata");
-    container.insertBefore(video, container.firstChild);
-
-    // 2. RUN YOUR EXACT SHAKA SCRIPT
     shaka.polyfill.installAll();
     if(!shaka.Player.isBrowserSupported()) return;
 
-    const player = new shaka.Player();
-    await player.attach(video);
-    currentPlayer = player; // Save reference
+    const video=document.getElementById("video");
+    const container=document.getElementById("player-container");
 
-    const ui = new shaka.ui.Overlay(player, container, video);
-    currentUi = ui; // Save reference
+    video.muted=true;
+
+    const player=new shaka.Player();
+    await player.attach(video);
+
+    const ui=new shaka.ui.Overlay(player,container,video);
 
     ui.configure({
         addBigPlayButton: true,
         controlPanelElements: [
-            "mute",            
+            "mute",           
             "play_pause",      
             "time_and_duration", 
             "spacer",
@@ -192,63 +94,53 @@ async function buildAndPlayStream() {
         }
     });
 
-    // Handle DRM Object based on your exact code
-    let drmConfig = {};
-    if (CONFIG.keyId && CONFIG.key) {
-        drmConfig = { clearKeys: { [CONFIG.keyId]: CONFIG.key } };
-    }
-
     player.configure({
-      drm: drmConfig,
-      manifest: { defaultPresentationDelay: 5 },
-      streaming: {
-        lowLatencyMode: true,
-        bufferingGoal: 10,
-        rebufferingGoal: 2,
-        safeSeekOffset: 5
+      drm:{clearKeys:{[CONFIG.keyId]:CONFIG.key}},
+      manifest:{defaultPresentationDelay:5},
+      streaming:{
+        lowLatencyMode:true,
+        bufferingGoal:10,
+        rebufferingGoal:2,
+        safeSeekOffset:5
       }
     });
 
-    let cookieValue = "";
+    let cookieValue="";
 
-    try {
-      const response = await fetch(CONFIG.cookieUrl, { cache: "no-store" });
-      const data = await response.json();
-      cookieValue = data.cookie || "";
-    } catch(e) {}
+    try{
+      const response=await fetch(CONFIG.cookieUrl,{cache:"no-store"});
+      const data=await response.json();
+      cookieValue=data.cookie||"";
+    }catch(e){}
 
-    if (cookieValue) {
-      player.getNetworkingEngine().registerRequestFilter((type, request) => {
-        request.headers["Referer"] = "https://www.jiotv.com/";
-        request.headers["User-Agent"] = "plaYtv/7.1.5 (Linux;Android 13) ExoPlayerLib/2.11.6";
-        request.headers["Cookie"] = cookieValue;
+    if(cookieValue){
+      player.getNetworkingEngine().registerRequestFilter((type,request)=>{
+        request.headers["Referer"]="https://www.jiotv.com/";
+        request.headers["User-Agent"]="plaYtv/7.1.5 (Linux;Android 13) ExoPlayerLib/2.11.6";
+        request.headers["Cookie"]=cookieValue;
 
-        let urlCookie = cookieValue.startsWith("__hdnea__=") ? cookieValue.substring(10) : cookieValue;
+        let urlCookie=cookieValue.startsWith("__hdnea__=")?cookieValue.substring(10):cookieValue;
 
-        if ((type === shaka.net.NetworkingEngine.RequestType.MANIFEST ||
-        type === shaka.net.NetworkingEngine.RequestType.SEGMENT) &&
-        !request.uris[0].includes("__hdnea__")) {
-          const sep = request.uris[0].includes("?") ? "&" : "?";
-          request.uris[0] += sep + "__hdnea__=" + urlCookie;
+        if((type===shaka.net.NetworkingEngine.RequestType.MANIFEST||
+        type===shaka.net.NetworkingEngine.RequestType.SEGMENT)&&
+        !request.uris[0].includes("__hdnea__")){
+          const sep=request.uris[0].includes("?")?"&":"?";
+          request.uris[0]+=sep+"__hdnea__="+urlCookie;
         }
       });
     }
 
-    try {
+    try{
       await player.load(CONFIG.streamUrl);
-      video.play().catch(() => {});
-    } catch(e) {
-      console.error("Player Load Error:", e);
-    }
+      video.play().catch(()=>{});
+    }catch(e){}
 
-    video.addEventListener("play", () => {
-      video.muted = false;
+    video.addEventListener("play",()=>{
+      video.muted=false;
     });
-}
 
-// Attach to button and auto-run on load
-document.getElementById("play-btn").addEventListener("click", buildAndPlayStream);
-document.addEventListener("DOMContentLoaded", buildAndPlayStream);
+  });
+})();
 </script>
 </body>  
 </html>
