@@ -3,12 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sports Test</title>
+<title>VG Live TV</title>
 <meta name="referrer" content="no-referrer">
+<link rel="icon" href="https://raw.githubusercontent.com/VGLiveTV/vgtv/refs/heads/main/fav.png">
 <script src="https://cdn.jsdelivr.net/npm/shaka-player@4.16.2/dist/shaka-player.ui.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/shaka-player@4.16.2/dist/controls.css"/>
 
 <style>
+/* --- USER'S EXACT PLAYER STYLES --- */
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%;background:#000;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
 
@@ -16,9 +18,10 @@ html,body{width:100%;height:100%;background:#000;overflow:hidden;font-family:'Se
     position:fixed;
     inset:0;
     background:#000;
-    display:flex;
+    display:none; /* Hidden by default, shown when playing */
     align-items:center;
     justify-content:center;
+    z-index: 1000;
 }
 
 video{
@@ -43,9 +46,171 @@ video{
 @media(max-width:700px){
     .custom-watermark{font-size:9px;top:60%;left:16%}
 }
+
+/* --- GRID UI STYLES --- */
+:root {
+    --brand: #e50914; 
+    --brand-glow: rgba(229, 9, 20, 0.4);
+    --bg: #0a0f1a;
+    --card-bg: #111827;
+    --card-border: #1f2937;
+    --text-main: #f3f4f6;
+    --text-sub: #9ca3af;
+}
+
+#gridView {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+    width: 100%; 
+    max-width: 1200px;
+    margin: 0 auto;
+    background: var(--bg);
+    overflow-y: hidden;
+}
+
+.top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+.main-logo {
+    height: 40px; 
+    width: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+}
+
+.search-container {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end; 
+}
+
+#searchInput {
+    padding: 12px 20px;
+    width: 100%;
+    max-width: 400px; 
+    border-radius: 30px;
+    border: 1px solid var(--card-border);
+    background: var(--card-bg);
+    color: var(--text-main);
+    font-size: 15px;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+#searchInput:focus {
+    border-color: var(--brand);
+    box-shadow: 0 0 12px var(--brand-glow);
+}
+
+.channel-count {
+    font-size: 14px;
+    color: var(--text-sub);
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+.channel-count span {
+    color: var(--brand);
+    font-weight: bold;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 15px;
+    overflow-y: auto;
+    flex: 1;
+    padding-bottom: 20px;
+    padding-right: 5px;
+}
+
+.grid-container::-webkit-scrollbar { width: 8px; }
+.grid-container::-webkit-scrollbar-track { background: var(--bg); }
+.grid-container::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 4px; }
+.grid-container::-webkit-scrollbar-thumb:hover { background: var(--brand); }
+
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 15px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.card:hover {
+    transform: translateY(-5px);
+    border-color: var(--brand);
+}
+.card img {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    margin-bottom: 10px;
+    background: #fff;
+    border-radius: 10px;
+    padding: 4px;
+}
+.card .name {
+    font-size: 13px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+    color: var(--text-main);
+}
+.card .id-badge {
+    font-size: 10px;
+    color: var(--brand);
+    margin-top: 5px;
+    font-weight: 700;
+    background: rgba(229, 9, 20, 0.1);
+    padding: 3px 8px;
+    border-radius: 12px;
+}
+
+#loading {
+    text-align: center;
+    color: var(--text-sub);
+    margin-top: 50px;
+    font-size: 16px;
+}
+
+@media (max-width: 600px) {
+    #gridView { padding: 15px; }
+    .top-bar { margin-bottom: 10px; }
+    .main-logo { height: 28px; }
+    #searchInput { padding: 10px 16px; font-size: 14px; }
+    .grid-container { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; }
+}
 </style>
 </head>
 <body>
+
+<div id="gridView">
+    <div class="top-bar">
+        <img src="https://raw.githubusercontent.com/VGLiveTV/vgtv/refs/heads/main/logo.png" alt="VG TV Logo" class="main-logo">
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Search channels...">
+        </div>
+    </div>
+    <div id="channelCount" class="channel-count"></div>
+    <div id="loading">Fetching Channels...</div>
+    <div id="gridContainer" class="grid-container"></div>
+</div>
 
 <div class="shaka-video-container" id="player-container">
     <video id="video" autoplay muted playsinline preload="metadata"></video>
@@ -53,94 +218,185 @@ video{
 </div>
 
 <script>
-(function(){
-  const CONFIG={
-    streamUrl:"https://jiotvmblive.cdn.jio.com/bpk-tv/DD_Sports_BTS/output/index.mpd",
-    keyId:"0c1b139b9a955134a1efae8e44b63aac",
-    key:"00897bffd6997049787270797b8c3a17",
-    cookieUrl:"https://allrounderid2.pages.dev/api/cookie.json"
-  };
+const API_URL = "https://allrounderid.pages.dev/api/jiotv.json";
+let allChannels = [];
 
-  document.addEventListener("DOMContentLoaded",async()=>{
+const gridView = document.getElementById("gridView");
+const playerContainer = document.getElementById("player-container");
+const gridContainer = document.getElementById("gridContainer");
+const searchInput = document.getElementById("searchInput");
+const loading = document.getElementById("loading");
+const channelCount = document.getElementById("channelCount");
 
-    shaka.polyfill.installAll();
-    if(!shaka.Player.isBrowserSupported()) return;
+function getChannelFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("channel");
+}
 
-    const video=document.getElementById("video");
-    const container=document.getElementById("player-container");
+async function initApp() {
+    const targetChannelName = getChannelFromUrl();
+    
+    try {
+        const response = await fetch(API_URL);
+        allChannels = await response.json();
 
-    video.muted=true;
-
-    const player=new shaka.Player();
-    await player.attach(video);
-
-    const ui=new shaka.ui.Overlay(player,container,video);
-
-    ui.configure({
-        addBigPlayButton: true,
-        controlPanelElements: [
-            "mute",           
-            "play_pause",      
-            "time_and_duration", 
-            "spacer",
-            "quality",
-            "picture_in_picture",
-            "fullscreen"
-        ],
-        seekBarColors: {
-            base: "white",
-            buffered: "red", 
-            played: "green"
+        if (targetChannelName) {
+            // MODE 1: PLAY CHANNEL
+            const channel = allChannels.find(c => c.channel_name === targetChannelName);
+            if (channel) {
+                gridView.style.display = "none";
+                playerContainer.style.display = "flex";
+                document.title = channel.channel_name; 
+                startPlayer(channel);
+            } else {
+                alert("Channel not found!");
+            }
+        } else {
+            // MODE 2: SHOW GRID
+            playerContainer.style.display = "none";
+            gridView.style.display = "flex";
+            loading.style.display = "none";
+            
+            allChannels.sort((a, b) => (a.channel_name || "").localeCompare(b.channel_name || ""));
+            renderGrid(allChannels);
         }
-    });
+    } catch (err) {
+        console.error("Failed to load channels:", err);
+        if(!targetChannelName) loading.innerText = "Failed to load channels.";
+    }
+}
 
-    player.configure({
-      drm:{clearKeys:{[CONFIG.keyId]:CONFIG.key}},
-      manifest:{defaultPresentationDelay:5},
-      streaming:{
-        lowLatencyMode:true,
-        bufferingGoal:10,
-        rebufferingGoal:2,
-        safeSeekOffset:5
-      }
-    });
-
-    let cookieValue="";
-
-    try{
-      const response=await fetch(CONFIG.cookieUrl,{cache:"no-store"});
-      const data=await response.json();
-      cookieValue=data.cookie||"";
-    }catch(e){}
-
-    if(cookieValue){
-      player.getNetworkingEngine().registerRequestFilter((type,request)=>{
-        request.headers["Referer"]="https://www.jiotv.com/";
-        request.headers["User-Agent"]="plaYtv/7.1.5 (Linux;Android 13) ExoPlayerLib/2.11.6";
-        request.headers["Cookie"]=cookieValue;
-
-        let urlCookie=cookieValue.startsWith("__hdnea__=")?cookieValue.substring(10):cookieValue;
-
-        if((type===shaka.net.NetworkingEngine.RequestType.MANIFEST||
-        type===shaka.net.NetworkingEngine.RequestType.SEGMENT)&&
-        !request.uris[0].includes("__hdnea__")){
-          const sep=request.uris[0].includes("?")?"&":"?";
-          request.uris[0]+=sep+"__hdnea__="+urlCookie;
-        }
-      });
+function renderGrid(channels) {
+    channelCount.innerHTML = `Total Channels: <span>${channels.length}</span>`;
+    gridContainer.innerHTML = "";
+    
+    if (channels.length === 0) {
+        gridContainer.innerHTML = "<div style='grid-column:1/-1;text-align:center;color:var(--text-sub);padding-top:40px;'>No channels found.</div>";
+        return;
     }
 
-    try{
-      await player.load(CONFIG.streamUrl);
-      video.play().catch(()=>{});
-    }catch(e){}
+    channels.forEach(c => {
+        const safeName = c.channel_name || "Unknown";
+        const safeLogo = c.channel_logo || "https://via.placeholder.com/100?text=VG+TV";
+        const category = c.channel_genre || "Live TV";
 
-    video.addEventListener("play",()=>{
-      video.muted=false;
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.onclick = () => window.open("?channel=" + encodeURIComponent(safeName), "_blank");
+
+        card.innerHTML = `
+            <img src="${safeLogo}" onerror="this.src='https://via.placeholder.com/100?text=TV'">
+            <div class="name">${safeName}</div>
+            <div class="id-badge">${category}</div>
+        `;
+        gridContainer.appendChild(card);
     });
+}
 
-  });
-})();
+searchInput.addEventListener("input", (e) => {
+    const term = e.target.value.toLowerCase();
+    const filtered = allChannels.filter(c => 
+        (c.channel_name && c.channel_name.toLowerCase().includes(term)) ||
+        (c.channel_genre && c.channel_genre.toLowerCase().includes(term))
+    );
+    renderGrid(filtered);
+});
+
+// --- USER'S EXACT PLAYER LOGIC WRAPPED IN A FUNCTION ---
+function startPlayer(channelData) {
+    const CONFIG = {
+        streamUrl: channelData.channel_url || "",
+        keyId: (channelData.keyId && channelData.keyId !== "Null") ? channelData.keyId : "",
+        key: (channelData.key && channelData.key !== "Null") ? channelData.key : "",
+        cookieUrl: "https://allrounderid2.pages.dev/api/cookie.json"
+    };
+
+    (async () => {
+        shaka.polyfill.installAll();
+        if(!shaka.Player.isBrowserSupported()) return;
+
+        const video = document.getElementById("video");
+        const container = document.getElementById("player-container");
+
+        video.muted = true;
+
+        const player = new shaka.Player();
+        await player.attach(video);
+
+        const ui = new shaka.ui.Overlay(player, container, video);
+
+        ui.configure({
+            addBigPlayButton: true,
+            controlPanelElements: [
+                "mute",           
+                "play_pause",      
+                "time_and_duration", 
+                "spacer",
+                "quality",
+                "picture_in_picture",
+                "fullscreen"
+            ],
+            seekBarColors: {
+                base: "white",
+                buffered: "red", 
+                played: "green"
+            }
+        });
+
+        let drmConfig = { clearKeys: {} };
+        if(CONFIG.keyId && CONFIG.key) {
+            drmConfig.clearKeys[CONFIG.keyId] = CONFIG.key;
+        }
+
+        player.configure({
+            drm: drmConfig,
+            manifest: { defaultPresentationDelay: 5 },
+            streaming: {
+                lowLatencyMode: true,
+                bufferingGoal: 10,
+                rebufferingGoal: 2,
+                safeSeekOffset: 5
+            }
+        });
+
+        let cookieValue = "";
+
+        try {
+            const response = await fetch(CONFIG.cookieUrl, { cache: "no-store" });
+            const data = await response.json();
+            cookieValue = data.cookie || "";
+        } catch(e) {}
+
+        if(cookieValue) {
+            player.getNetworkingEngine().registerRequestFilter((type, request) => {
+                request.headers["Referer"] = "https://www.jiotv.com/";
+                request.headers["User-Agent"] = "plaYtv/7.1.5 (Linux;Android 13) ExoPlayerLib/2.11.6";
+                request.headers["Cookie"] = cookieValue;
+
+                let urlCookie = cookieValue.startsWith("__hdnea__=") ? cookieValue.substring(10) : cookieValue;
+
+                if((type === shaka.net.NetworkingEngine.RequestType.MANIFEST ||
+                type === shaka.net.NetworkingEngine.RequestType.SEGMENT) &&
+                !request.uris[0].includes("__hdnea__")) {
+                    const sep = request.uris[0].includes("?") ? "&" : "?";
+                    request.uris[0] += sep + "__hdnea__=" + urlCookie;
+                }
+            });
+        }
+
+        try {
+            await player.load(CONFIG.streamUrl);
+            video.play().catch(()=>{});
+        } catch(e) {}
+
+        video.addEventListener("play", () => {
+            video.muted = false;
+        });
+    })();
+}
+
+// Start App
+document.addEventListener("DOMContentLoaded", initApp);
 </script>
 </body>  
 </html>
