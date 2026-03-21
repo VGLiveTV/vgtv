@@ -344,6 +344,7 @@
             const safeUrl = JSON.stringify(cleanUrl);
             const safeName = JSON.stringify(channel.name || "VG TV Player");
 
+            // Notice the removed data-shaka-player attributes and updated CSS to fix UI overlay
             const playerCode = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -360,23 +361,22 @@
     *{margin:0;padding:0;box-sizing:border-box}
     html,body{width:100%;height:100%;background:#000;overflow:hidden;font-family:'Segoe UI', Roboto, Helvetica, Arial, sans-serif}
 
-    .shaka-video-container{
-      position:fixed;
-      inset:0;
-      background:#000;
-      display:flex;
-      align-items:center;
-      justify-content:center;
+    /* Fixed Container CSS for Shaka UI */
+    .shaka-video-container {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+      background: #000;
     }
 
-    video{
-      width:100%;
-      height:100%;
-      object-fit:contain;
-      background:#000;
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000;
     }
 
-    .custom-watermark{
+    .custom-watermark {
       position:absolute;
       z-index:40;
       pointer-events:none;
@@ -398,7 +398,7 @@
 </head>
 <body>
 
-  <div class="shaka-video-container" id="player-container" data-shaka-player>
+  <div class="shaka-video-container" id="player-container">
     <video id="video" autoplay playsinline preload="metadata"></video>
     <div class="custom-watermark"> </div>
   </div>
@@ -411,8 +411,7 @@
       const videoEl = document.getElementById('video');
       const container = document.getElementById('player-container');
 
-      const player = new shaka.Player();
-      await player.attach(videoEl);
+      const player = new shaka.Player(videoEl);
 
       const ui = new shaka.ui.Overlay(player, container, videoEl);
 
