@@ -1,12 +1,359 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VG TV - Channel Directory</title>
+    <link rel="icon" href="https://raw.githubusercontent.com/VGLiveTV/vgtv/refs/heads/main/fav.png">
+    
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --card-border: #334155;
+            --accent: #e50914;
+            --text: #f8fafc;
+            --sub-text: #94a3b8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
+        
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+        }
+
+        /* --- Navbar & Filters --- */
+        .nav { 
+            padding: 15px 20px; 
+            background: #0b1120; 
+            border-bottom: 2px solid var(--accent); 
+            display: flex; 
+            gap: 15px; 
+            align-items: center; 
+            flex-wrap: wrap; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        
+        .nav-logo { height: 35px; margin-right: 10px; object-fit: contain; }
+
+        /* Server Toggles */
+        .server-toggles { display: flex; gap: 5px; margin-right: 5px; }
+        .server-btn { padding: 6px 12px; background: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 4px; font-size: 12px; cursor: pointer; transition: 0.2s; font-weight: bold;}
+        .server-btn:hover { background: #334155; }
+        .server-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+        .filter-group { 
+            display: flex; 
+            gap: 10px; 
+            flex-wrap: wrap;
+            flex: 1;
+        }
+
+        select, input { 
+            padding: 10px; 
+            border-radius: 6px; 
+            border: 1px solid var(--card-border); 
+            background: #000; 
+            color: #fff; 
+            outline: none; 
+            font-size: 14px; 
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        input[type="text"] { flex: 1; min-width: 150px; }
+        select { flex: 1; min-width: 120px; }
+        select:focus, input:focus { border-color: var(--accent); box-shadow: 0 0 8px rgba(229, 9, 20, 0.4); }
+
+        .btn { padding: 10px 15px; background: var(--accent); color: #fff; border-radius: 6px; font-weight: bold; cursor: pointer; border: none; font-size: 13px; white-space: nowrap; text-decoration: none; transition: 0.2s; }
+        .btn:hover { opacity: 0.9; }
+
+        /* --- Grid Layout --- */
+        .grid { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 20px; 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); 
+            gap: 15px; 
+            align-content: start;
+        }
+
+        .card { 
+            background: var(--card); 
+            padding: 15px; 
+            border-radius: 10px; 
+            text-align: center; 
+            border: 1px solid var(--card-border); 
+            cursor: pointer;
+            transition: all 0.2s ease; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .card:hover { 
+            border-color: var(--accent); 
+            transform: translateY(-4px); 
+            box-shadow: 0 8px 15px rgba(0,0,0,0.5);
+        }
+
+        .card img { 
+            width: 70px; 
+            height: 70px; 
+            object-fit: contain; 
+            background: #fff; 
+            border-radius: 8px; 
+            padding: 5px; 
+            margin-bottom: 12px; 
+        }
+
+        .card-title { 
+            font-size: 14px; 
+            font-weight: bold; 
+            width: 100%;
+            overflow: hidden; 
+            white-space: nowrap; 
+            text-overflow: ellipsis; 
+            margin-bottom: 8px;
+        }
+
+        .card-badges {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            font-size: 10px;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            background: rgba(255,255,255,0.05);
+            color: var(--sub-text);
+        }
+        .badge.category { border-left: 2px solid var(--accent); }
+        .badge.language { border-left: 2px solid #3b82f6; }
+
+        .status-msg { grid-column: 1/-1; text-align: center; color: var(--sub-text); margin-top: 50px; font-size: 16px; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+    </style>
+</head>
+<body>
+
+    <div class="nav">
+        <img src="https://raw.githubusercontent.com/VGLiveTV/vgtv/refs/heads/main/logo.png" alt="VG TV Logo" class="nav-logo">
+        
+        <div class="server-toggles">
+            <button class="server-btn active" id="btn-srv1" onclick="switchServer(1)">Server 1</button>
+            <button class="server-btn" id="btn-srv2" onclick="switchServer(2)">Server 2</button>
+        </div>
+
+        <div class="filter-group">
+            <input type="text" id="searchInput" placeholder="Search channels...">
+            <select id="catFilter">
+                <option value="all">All Categories</option>
+            </select>
+            <select id="langFilter">
+                <option value="all">All Languages</option>
+            </select>
+        </div>
+        
+        <button class="btn" onclick="fetchBothServers()">REFRESH</button>
+    </div>
+
+    <div id="grid" class="grid">
+        <div class="status-msg">Loading channels...</div>
+    </div>
+
+    <script>
+        const API_URL_1 = "https://allrounderid.pages.dev/api/jiotv.json";
+        const API_URL_2 = "https://allrounderid.pages.dev/api/jiotv2.json";
+        
+        let db1 = [];
+        let db2 = [];
+        let activeDb = [];
+        
+        // HARDCODED GLOBAL COOKIE
+        const globalLiveCookie = "__hdnea__=st=1774089189~exp=1774175589~acl=/*~hmac=b411fb6b11773061f720a9eb9dcbd244372a643dbe0113ca9f93042481c8202c";
+        
+        // DOM Elements
+        const grid = document.getElementById('grid');
+        const searchInput = document.getElementById('searchInput');
+        const catFilter = document.getElementById('catFilter');
+        const langFilter = document.getElementById('langFilter');
+
+        // 1. Fetch BOTH APIs on load
+        async function fetchBothServers() {
+            grid.innerHTML = '<div class="status-msg">Fetching Servers...</div>';
+            
+            try {
+                try {
+                    const res1 = await fetch(API_URL_1);
+                    if (res1.ok) {
+                        const raw1 = await res1.json();
+                        db1 = formatData(raw1);
+                    }
+                } catch(e) { console.warn("Server 1 failed to load"); }
+
+                try {
+                    const res2 = await fetch(API_URL_2);
+                    if (res2.ok) {
+                        const raw2 = await res2.json();
+                        db2 = formatData(raw2);
+                    }
+                } catch(e) { console.warn("Server 2 failed to load"); }
+
+                // Sort both alphabetically
+                db1.sort((a, b) => a.name.localeCompare(b.name));
+                db2.sort((a, b) => a.name.localeCompare(b.name));
+                
+                // Default to Server 1 on startup
+                switchServer(1);
+            } catch (err) {
+                grid.innerHTML = `<div class="status-msg" style="color:red;">Failed to Load Channels.<br>Check Internet Connection.</div>`;
+                console.error(err);
+            }
+        }
+
+        // Format raw API data into consistent object
+        function formatData(data) {
+            return data.map(c => ({
+                name: c.channel_name || "Unknown Channel",
+                logo: c.channel_logo || "https://via.placeholder.com/70?text=TV",
+                category: c.channel_genre || c.category || "Others",
+                language: c.channel_language || c.language || "Others",
+                url: c.channel_url || "No URL Provided",
+                keyId: c.keyId || "Null",
+                key: c.key || "Null"
+            }));
+        }
+
+        // Switch between Server 1 and Server 2
+        function switchServer(num) {
+            activeDb = (num === 1) ? db1 : db2;
+            
+            document.getElementById('btn-srv1').classList.toggle('active', num === 1);
+            document.getElementById('btn-srv2').classList.toggle('active', num === 2);
+            
+            searchInput.value = "";
+            catFilter.value = "all";
+            langFilter.value = "all";
+            
+            populateFilters(); 
+            applyFilters();
+        }
+
+        // 2. Populate Dropdowns (WITH COUNTS) based on activeDb
+        function populateFilters() {
+            const currentCat = catFilter.value;
+            const currentLang = langFilter.value;
+
+            // Category Counts
+            const catBaseList = activeDb.filter(c => currentLang === "all" ? true : c.language === currentLang);
+            const catCounts = {};
+            catBaseList.forEach(c => catCounts[c.category] = (catCounts[c.category] || 0) + 1);
+            
+            let catHTML = `<option value="all">All Categories (${catBaseList.length})</option>`;
+            Object.keys(catCounts).sort().forEach(cat => {
+                 catHTML += `<option value="${cat}" ${cat === currentCat ? 'selected' : ''}>${cat} (${catCounts[cat]})</option>`;
+            });
+            catFilter.innerHTML = catHTML;
+
+            // Language Counts
+            const langBaseList = activeDb.filter(c => currentCat === "all" ? true : c.category === currentCat);
+            const langCounts = {};
+            langBaseList.forEach(c => langCounts[c.language] = (langCounts[c.language] || 0) + 1);
+            
+            let langHTML = `<option value="all">All Languages (${langBaseList.length})</option>`;
+            Object.keys(langCounts).sort().forEach(lang => {
+                langHTML += `<option value="${lang}" ${lang === currentLang ? 'selected' : ''}>${lang} (${langCounts[lang]})</option>`;
+            });
+            langFilter.innerHTML = langHTML;
+        }
+
+        // 3. Render the Grid
+        function renderGrid(channelsToRender) {
+            grid.innerHTML = ""; 
+
+            if (channelsToRender.length === 0) {
+                grid.innerHTML = `<div class="status-msg">No channels match your filters in this server.</div>`;
+                return;
+            }
+
+            channelsToRender.forEach(c => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.onclick = () => playInNewTab(c);
+
+                card.innerHTML = `
+                    <img src="${c.logo}" alt="logo" loading="lazy" onerror="this.src='https://via.placeholder.com/70?text=TV'">
+                    <div class="card-title">${c.name}</div>
+                    <div class="card-badges">
+                        <span class="badge category">${c.category}</span>
+                        <span class="badge language">${c.language}</span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // 4. Handle Filtering
+        function applyFilters() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const selectedCat = catFilter.value;
+            const selectedLang = langFilter.value;
+
+            const filteredChannels = activeDb.filter(c => {
+                const matchesSearch = c.name.toLowerCase().includes(searchTerm);
+                const matchesCat = (selectedCat === "all") || (c.category === selectedCat);
+                const matchesLang = (selectedLang === "all") || (c.language === selectedLang);
+                return matchesSearch && matchesCat && matchesLang;
+            });
+
+            renderGrid(filteredChannels);
+            populateFilters(); 
+        }
+
+        searchInput.addEventListener('input', applyFilters);
+        catFilter.addEventListener('change', applyFilters);
+        langFilter.addEventListener('change', applyFilters);
+
+        // 5. BLOB PLAYER - Opens Player in New Tab
+        function playInNewTab(channel) {
+            // Clean URL
+            let cleanUrl = channel.url;
+            if (cleanUrl && cleanUrl.includes('.mpd')) {
+                cleanUrl = cleanUrl.substring(0, cleanUrl.indexOf('.mpd') + 4);
+            } else if (cleanUrl && cleanUrl.includes('?')) {
+                cleanUrl = cleanUrl.split('?')[0]; 
+            }
+
+            const safeKid = JSON.stringify(channel.keyId || "Null");
+            const safeKey = JSON.stringify(channel.key || "Null");
+            const safeCookie = JSON.stringify(globalLiveCookie);
+            const safeUrl = JSON.stringify(cleanUrl);
+            const safeName = JSON.stringify(channel.name || "VG TV Player");
+
+            const playerCode = `<!DOCTYPE html>
+<html lang="en">
+<head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Star Sports 1 Hindi HD</title>
+  <title>${channel.name || 'VG TV Player'}</title>
+  <link rel="icon" href="https://raw.githubusercontent.com/VGLiveTV/vgtv/refs/heads/main/fav.png">
   <meta name="referrer" content="no-referrer">
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.ui.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.ui.min.js"><\/script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/controls.min.css" />
 
   <style>
@@ -44,26 +391,20 @@
     @media(max-width:700px){
       .custom-watermark{ font-size:9px; top:60%; left:16%; }
     }
+    
+    /* Hide default Shaka Spinners */
+    .shaka-spinner-container, .shaka-spinner, .shaka-spinner-svg { display: none !important; }
   </style>
 </head>
 <body>
 
-  <div class="shaka-video-container" id="player-container">
+  <div class="shaka-video-container" id="player-container" data-shaka-player>
     <video id="video" autoplay playsinline preload="metadata"></video>
     <div class="custom-watermark"> </div>
   </div>
 
   <script>
-    const CONFIG = {
-      streamUrl: "https://jiotvmblive.cdn.jio.com/bpk-tv/Aaj_Tak_BTS/output/index.mpd",
-      keyId: "609ace1518f15ee2bcee407f5e435fed",
-      key: "533464a6d57d3e40b61b8fa8c4fe6627",
-
-      manualCookie: "__hdnea__=st=1774089189~exp=1774175589~acl=/*~hmac=b411fb6b11773061f720a9eb9dcbd244372a643dbe0113ca9f93042481c8202c",
-    };
-
     document.addEventListener('DOMContentLoaded', async () => {
-
       shaka.polyfill.installAll();
       if (!shaka.Player.isBrowserSupported()) return;
 
@@ -77,42 +418,64 @@
 
       ui.configure({
         controlPanelElements: ['play_pause','time_and_duration','mute','volume','spacer','language','captions','picture_in_picture','quality','fullscreen'],
-        seekBarColors: { base: 'white', buffered: 'red', played: 'green' }
+        seekBarColors: { base: 'rgba(255,255,255,0.3)', buffered: 'rgba(229,9,20,0.5)', played: '#e50914' }
       });
 
+      const kid = ${safeKid};
+      const key = ${safeKey};
+      const cookieHeader = ${safeCookie};
+      const streamUrl = ${safeUrl};
+
+      let drmConfig = { clearKeys: {} };
+      if (kid !== "Null" && key !== "Null") {
+        drmConfig.clearKeys[kid] = key;
+      }
+
       player.configure({
-        drm: { clearKeys: { [CONFIG.keyId]: CONFIG.key } },
+        drm: drmConfig,
         manifest: { defaultPresentationDelay: 5 },
         streaming: { safeSeekOffset: 5, bufferingGoal: 10, rebufferingGoal: 2, lowLatencyMode: true }
       });
 
       player.getNetworkingEngine().registerRequestFilter((type, request) => {
-
         request.headers['Referer'] = 'https://www.jiotv.com/';
         request.headers['User-Agent'] = 'plaYtv/7.1.5 (Linux;Android 13) ExoPlayerLib/2.11.6';
 
-        if (CONFIG.manualCookie && CONFIG.manualCookie !== "PUT_YOUR_COOKIE_HERE") {
-
-          request.headers['Cookie'] = CONFIG.manualCookie;
+        if (cookieHeader && cookieHeader !== "PUT_YOUR_COOKIE_HERE") {
+          request.headers['Cookie'] = cookieHeader;
 
           if ((type === shaka.net.NetworkingEngine.RequestType.MANIFEST ||
                type === shaka.net.NetworkingEngine.RequestType.SEGMENT) &&
                !request.uris[0].includes('__hdnea__')) {
-
             const sep = request.uris[0].includes('?') ? '&' : '?';
-            request.uris[0] += sep + CONFIG.manualCookie;
+            request.uris[0] += sep + cookieHeader;
           }
         }
       });
 
       try {
-        await player.load(CONFIG.streamUrl);
+        await player.load(streamUrl);
         videoEl.play();
       } catch (e) {
         console.error("Stream Load Error:", e);
+        if (e.code === 6001) { 
+            console.log("Retrying without DRM config...");
+            player.configure({ drm: {} });
+            try { await player.load(streamUrl); videoEl.play(); } catch(err){}
+        }
       }
     });
-  </script>
+  <\/script>
+</body>
+</html>`;
 
+            const blob = new Blob([playerCode], { type: 'text/html' });
+            const blobUrl = URL.createObjectURL(blob);
+            window.open(blobUrl, '_blank');
+        }
+
+        // Start App
+        fetchBothServers();
+    </script>
 </body>
 </html>
