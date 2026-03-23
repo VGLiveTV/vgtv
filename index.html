@@ -144,12 +144,12 @@
         @media (max-width: 650px) {
             .nav { 
                 display: grid;
-                grid-template-columns: auto 1fr; /* Logo takes space it needs, Search takes rest */
+                grid-template-columns: auto 1fr; 
                 padding: 12px 10px; 
                 gap: 10px;
             }
             .nav-logo { 
-                height: 42px; /* Fixed height for mobile */
+                height: 42px; 
             }
             #searchInput { 
                 width: 100%; 
@@ -157,9 +157,9 @@
                 padding: 10px 12px; 
             }
             .filter-group { 
-                grid-column: 1 / -1; /* Spans the entire bottom row */
+                grid-column: 1 / -1; 
                 display: flex;
-                flex-direction: row; /* Keeps Selects side-by-side */
+                flex-direction: row; 
                 width: 100%; 
                 gap: 10px;
             }
@@ -201,12 +201,12 @@
 
     <script>
         const API_URL = "https://allrounderid.pages.dev/api/jiotv.json";
+        const COOKIE_URL = "https://raw.githubusercontent.com/vaathala00/jow/main/output.json";
+        
         let allChannels = [];
         
-        // HARDCODED GLOBAL COOKIE
-        const globalLiveCookie = "__hdnea__=st=1774246342~exp=1774332742~acl=/*~hmac=d1e39f693c3017e7e3d71b9a1b484c72acf4623941d13c40e278fa0b2fd7a776";
+        let globalLiveCookie = "Fetching...";
         
-        // DOM Elements
         const grid = document.getElementById('grid');
         const searchInput = document.getElementById('searchInput');
         const catFilter = document.getElementById('catFilter');
@@ -215,6 +215,25 @@
         // 1. Fetch Data on load
         async function fetchChannels() {
             try {
+                // FETCH LIVE COOKIE FROM RAW TEXT
+                try {
+                    const cookieRes = await fetch(COOKIE_URL);
+                    if (cookieRes.ok) {
+                        const rawText = await cookieRes.text();
+                        // Smart regex to pull exactly the __hdnea__ string, ignoring everything else
+                        const match = rawText.match(/__hdnea__=[A-Za-z0-9~=/*_-]+/);
+                        if (match) {
+                            globalLiveCookie = match[0];
+                        } else {
+                            globalLiveCookie = "Cookie string not found in file";
+                        }
+                    }
+                } catch (e) {
+                    console.error("Failed to fetch live cookie", e);
+                    globalLiveCookie = "Error fetching cookie";
+                }
+
+                // Fetch Channels
                 const res = await fetch(API_URL);
                 if (!res.ok) throw new Error("API Failed");
                 
@@ -250,7 +269,6 @@
             const currentCat = catFilter.value;
             const currentLang = langFilter.value;
 
-            // Category Counts based on selected language
             const catBaseList = allChannels.filter(c => currentLang === "all" ? true : c.language === currentLang);
             const catCounts = {};
             catBaseList.forEach(c => catCounts[c.category] = (catCounts[c.category] || 0) + 1);
@@ -261,7 +279,6 @@
             });
             catFilter.innerHTML = catHTML;
 
-            // Language Counts based on selected category
             const langBaseList = allChannels.filter(c => currentCat === "all" ? true : c.category === currentCat);
             const langCounts = {};
             langBaseList.forEach(c => langCounts[c.language] = (langCounts[c.language] || 0) + 1);
@@ -413,7 +430,7 @@
       ui.configure({
         addBigPlayButton: true,
         controlPanelElements: ['play_pause','time_and_duration','mute','volume','spacer','language','captions','picture_in_picture','quality','fullscreen'],
-        seekBarColors: { base: 'white', buffered: 'red', played: 'green' }
+        seekBarColors: { base: 'rgba(255,255,255,0.3)', buffered: 'rgba(229,9,20,0.5)', played: '#e50914' }
       });
 
       const kid = ${safeKid};
