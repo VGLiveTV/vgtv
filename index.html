@@ -201,10 +201,12 @@
 
     <script>
         const API_URL = "https://allrounderid.pages.dev/api/jiotv.json";
+        const COOKIE_URL = "https://raw.githubusercontent.com/vaathala00/jow/main/output.json";
+        
         let allChannels = [];
         
-        // HARDCODED GLOBAL COOKIE
-        const globalLiveCookie = "__hdnea__=st=1774246342~exp=1774332742~acl=/*~hmac=d1e39f693c3017e7e3d71b9a1b484c72acf4623941d13c40e278fa0b2fd7a776";
+        // Initial fallback cookie, will be overwritten dynamically
+        let globalLiveCookie = "__hdnea__=st=1774246342~exp=1774332742~acl=/*~hmac=d1e39f693c3017e7e3d71b9a1b484c72acf4623941d13c40e278fa0b2fd7a776";
         
         // DOM Elements
         const grid = document.getElementById('grid');
@@ -212,9 +214,24 @@
         const catFilter = document.getElementById('catFilter');
         const langFilter = document.getElementById('langFilter');
 
-        // 1. Fetch Data on load
+        // 1. Fetch Data on load (Both Cookie and Channels)
         async function fetchChannels() {
             try {
+                // Fetch Cookie First
+                try {
+                    const cookieRes = await fetch(COOKIE_URL);
+                    if (cookieRes.ok) {
+                        const cookieData = await cookieRes.json();
+                        // Assume the cookie is in the first object of the array
+                        if (cookieData && cookieData.length > 0 && cookieData[0].cookie) {
+                            globalLiveCookie = cookieData[0].cookie;
+                        }
+                    }
+                } catch (e) {
+                    console.error("Failed to fetch live cookie, using fallback", e);
+                }
+
+                // Fetch Channels Second
                 const res = await fetch(API_URL);
                 if (!res.ok) throw new Error("API Failed");
                 
