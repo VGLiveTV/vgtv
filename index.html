@@ -200,7 +200,8 @@
     </div>
 
     <script>
-        const API_URL = "https://allrounderid.pages.dev/api/jiotv.json";
+        // NEW WORKER URL REPLACED HERE
+        const API_URL = "https://pkll.xojiv79335.workers.dev/";
         const COOKIE_URL = "https://raw.githubusercontent.com/vaathala00/jow/main/output.json";
         
         let allChannels = [];
@@ -233,8 +234,15 @@
                     globalLiveCookie = "Error fetching cookie";
                 }
 
-                // Fetch Channels
-                const res = await fetch(API_URL);
+                // Fetch Channels (with proxy fallback in case the worker blocks direct requests)
+                let res;
+                try {
+                    res = await fetch(API_URL);
+                    if (!res.ok) throw new Error("Direct Fetch Failed");
+                } catch(e) {
+                    res = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(API_URL));
+                }
+                
                 if (!res.ok) throw new Error("API Failed");
                 
                 const raw = await res.json();
@@ -251,16 +259,34 @@
             }
         }
 
-        // Format raw API data
+        // UPGRADED SMART DATA FORMATTER (Adapts to different JSON structures automatically)
         function formatData(data) {
-            return data.map(c => ({
-                name: c.channel_name || "Unknown Channel",
-                logo: c.channel_logo || "https://via.placeholder.com/70?text=TV",
-                category: c.channel_genre || c.category || "Others",
-                language: c.channel_language || c.language || "Others",
-                url: c.channel_url || "No URL Provided",
-                keyId: c.keyId || "Null",
-                key: c.key || "Null"
+            let channelsArray = [];
+            
+            if (Array.isArray(data)) {
+                channelsArray = data;
+            } else if (typeof data === 'object' && data !== null) {
+                // Check for nested arrays inside the JSON object
+                for (let key in data) {
+                    if (Array.isArray(data[key])) {
+                        channelsArray = data[key];
+                        break;
+                    }
+                }
+                // Fallback: If no array found, parse the object values
+                if (channelsArray.length === 0) {
+                    channelsArray = Object.values(data).filter(item => typeof item === 'object' && item !== null);
+                }
+            }
+
+            return channelsArray.map(c => ({
+                name: c.channel_name || c.name || c.title || "Unknown Channel",
+                logo: c.channel_logo || c.logo || c.logo_url || "https://via.placeholder.com/70?text=TV",
+                category: c.channel_genre || c.category || c.genre || "Others",
+                language: c.channel_language || c.language || c.lang || "Others",
+                url: c.channel_url || c.url || c.stream_url || "No URL Provided",
+                keyId: c.keyId || c.kid || c.clearkey_id || "Null",
+                key: c.channel_key || c.key || c.k || c.clearkey_hex || "Null"
             }));
         }
 
