@@ -500,7 +500,6 @@
             player.configure({ drm: {} });
             try { await player.load(streamUrl); videoEl.play(); } catch(err){}
         }
-      }
           video.addEventListener("play",()=>{
       video.muted=true;
     });
