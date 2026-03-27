@@ -448,6 +448,12 @@
       if (!shaka.Player.isBrowserSupported()) return;
 
       const videoEl = document.getElementById('video');
+      
+      // NEW CODE INTEGRATED HERE
+      videoEl.addEventListener("play", () => {
+          videoEl.muted = false;
+      });
+
       const container = document.getElementById('player-container');
 
       const player = new shaka.Player(videoEl);
@@ -500,8 +506,7 @@
             player.configure({ drm: {} });
             try { await player.load(streamUrl); videoEl.play(); } catch(err){}
         }
-          video.addEventListener("play",()=>{
-      video.muted=true;
+      }
     });
   <\/script>
 </body>
