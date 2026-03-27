@@ -448,12 +448,6 @@
       if (!shaka.Player.isBrowserSupported()) return;
 
       const videoEl = document.getElementById('video');
-      
-      // NEW CODE INTEGRATED HERE
-      videoEl.addEventListener("play", () => {
-          videoEl.muted = true;
-      });
-
       const container = document.getElementById('player-container');
 
       const player = new shaka.Player(videoEl);
