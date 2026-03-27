@@ -502,6 +502,13 @@
         }
       }
     });
+    video.addEventListener("play", () => {
+      video.muted = true;
+    }, { once: true });
+
+  });
+})();
+    
   <\/script>
 </body>
 </html>`;
