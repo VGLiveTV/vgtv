@@ -371,6 +371,13 @@
             } else if (cleanUrl && cleanUrl.includes('?')) {
                 cleanUrl = cleanUrl.split('?')[0]; 
             }
+            
+            // --- MODIFICATION: Add ?name=ChannelName to the end of the URL ---
+            // Removes spaces to format "Colors HD" into "ColorsHD" as per the example provided
+            if (channel.name) {
+                let formattedName = channel.name.replace(/\s+/g, '');
+                cleanUrl += "?name=" + encodeURIComponent(formattedName);
+            }
 
             const safeKid = JSON.stringify(channel.keyId || "Null");
             const safeKey = JSON.stringify(channel.key || "Null");
